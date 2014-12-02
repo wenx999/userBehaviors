@@ -17,12 +17,22 @@ def logSumExp(logs):
 
 class likelihoods:
     '''
-    A class of likelihood functions supported by the HMM class
+    A class of likelihood functions supported by the HMM class.
+    Types supported: 
+        poisson
+        multinomial
+        binomial
+        gaussian
+        linear regression
+        logistic regression
     '''
+    def __init__(self, type):
+
+
 
 class HMM:
     '''
-    A flexible class for defining arbitrary hidden markov models
+    A class for defining arbitrary hidden markov models
     '''
 
     def __init__(self, n_classes, data_types):

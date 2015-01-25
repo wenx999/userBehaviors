@@ -15,48 +15,72 @@ def logSumExp(logs):
     a= min(logs)
     return a+log(sum(exp(i-a) for i in logs))
 
-class likelihoods:
-    '''
-    A class of likelihood functions supported by the HMM class.
-    Types supported: 
-        poisson
-        multinomial
-        binomial
-        gaussian
-        linear regression
-        logistic regression
-    '''
-    def __init__(self, type):
-
-
 
 class HMM:
     '''
-    A class for defining arbitrary hidden markov models
+    Just a multinomial HMM first
     '''
-
-    def __init__(self, n_classes, data_types):
+    def __init__(self, n_states, n_words, init_probs= False, trans_probs= False, emit_probs= False):
         '''
         Arguments:
-            n_classes - int number of classes to fit
-            data_types - distributions to fit, same length as data
+            n_states - int number of classes to fit
+            n_words - int number of emissions
         '''
-        self.n_classes= n_classes
-        self.data_types= data_types
-        init_probs= [random() for i in range(n_classes)]
-        self.init_probs= [i/sum(init_probs) for i in init_probs]
+        self.n_states= n_states
+        init_probs= [random() for i in range(n_states)]
+        init_probs= [i/sum(init_probs) for i in init_probs]
+        exit_probs= [random() for i in range(n_states)]
+        exit_probs= [i/sum(init_probs) for i in init_probs]
         trans_probs= defaultdict(dict)
-        for i in range(n_classes):
-            for j in range(n_classes):
+        for i in range(n_states):
+            for j in range(n_states):
                 trans_probs[i][j]= random()
             total= sum(trans_probs[i].values())
-            for j in range(n_classes):
+            for j in range(n_states):
                 trans_probs[i][j]= trans_probs[i][j]/total
+        emit_probs= defaultdict(dict)
+        for i in range(n_states):
+            for j in range(n_words):
+                emit_probs[i][j]= random()
+            total= sum(emit_probs[i].values())
+            for w in range(n_words):
+                emit_probs[i][w]= emit_probs[i][w]/total
         self.trans_probs= trans_probs
+        self.init_probs= init_probs
+        self.exit_probs= exit_probs
+        self.emit_probs= emit_probs
 
 
-    def forwardPass(self):
-        pass
+    def forwardPass(self, sequence):
+        stateLikelihoodSeq= []
+        for ind, obs in enumerate(sequence):
+            if ind==0:
+                stateLikelihoodSeq.append([log(self.init_probs[i])+log(self.emit_probs[i][obs]) for i in range(self.n_states)])
+            else:
+                stateLikelihoods= []
+                for curr in range(self.n_states):
+                    logs= []
+                    for prev in range(self.n_states):
+                        logs.append(stateLikelihoodSeq[ind-1][prev]+log(self.trans_probs[prev][curr])+log(self.emit_probs[curr][obs]))
+                    stateLikelihoods.append(logSumExp(logs))
+        return stateLikelihoodSeq
 
-    def backwardPass(self):
-        pass
+
+    def backwardPass(self, sequence):
+        stateLikelihoodSeq= []
+        for ind, obs in reversed(list(enumerate(sequence))):
+            if ind==0:
+                stateLikelihoodSeq.append([log(self.exit_probs[i])+log(self.emit_probs[i][obs]) for i in range(self.n_states)])
+            else:
+                stateLikelihoods= []
+                for prev in range(self.n_states):
+                    logs= []
+                    for curr in range(self.n_states):
+                        logs.append(stateLikelihoodSeq[ind-1][prev]+log(self.trans_probs[prev][curr])+log(self.emit_probs[curr][obs]))
+                    stateLikelihoods.append(logSumExp(logs))
+        return stateLikelihoodSeq              
+
+
+
+
+
